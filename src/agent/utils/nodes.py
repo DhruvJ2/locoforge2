@@ -191,3 +191,75 @@ Respond with a JSON object in this format:
                 }
             ]
         }
+
+
+async def sql_agent_node(state: InputState, config: RunnableConfig) -> Dict[str, Any]:
+    """SQL agent node that processes SQL-related tasks from the supervisor."""
+    try:
+        # Get the last message which contains the task analysis
+        last_message = state["messages"][-1]["content"]
+        task_analysis = json.loads(last_message)
+        
+        # Initialize SQL agent
+        db_path = os.path.join(os.path.dirname(__file__), "sales.db")
+        sql_agent = SQLAgent(db_path)
+        
+        # Find SQL tasks
+        sql_tasks = [task for task in task_analysis["tasks"] if task["agent"] == "sql_agent"]
+        
+        results = []
+        for task in sql_tasks:
+            try:
+                # Execute the SQL task and await the result
+                result = await sql_agent.execute_query(task["taskDefinition"])
+                # Ensure the result is a dictionary, not a coroutine
+                if isinstance(result, dict):
+                    results.append({
+                        "task": task,
+                        "result": result
+                    })
+                else:
+                    logger.error(f"Unexpected result type: {type(result)}")
+                    results.append({
+                        "task": task,
+                        "error": "Invalid result type from SQL agent"
+                    })
+            except Exception as e:
+                logger.error(f"Error executing SQL task: {str(e)}", exc_info=True)
+                results.append({
+                    "task": task,
+                    "error": str(e)
+                })
+        
+        # Close the SQL agent connection
+        sql_agent.close()
+        
+        # Create the output state with results
+        output_state = {
+            "messages": [
+                {
+                    "role": "assistant",
+                    "content": json.dumps({
+                        "status": "success",
+                        "sql_results": results,
+                        "original_analysis": task_analysis
+                    }, indent=2)
+                }
+            ]
+        }
+        
+        return output_state
+    except Exception as e:
+        logger.error(f"Error in sql_agent_node: {str(e)}", exc_info=True)
+        return {
+            "messages": [
+                {
+                    "role": "assistant",
+                    "content": json.dumps({
+                        "status": "error",
+                        "error": f"Failed to process SQL tasks: {str(e)}",
+                        "retry_count": 0
+                    }, indent=2)
+                }
+            ]
+        }

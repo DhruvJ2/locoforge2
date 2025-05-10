@@ -3,8 +3,8 @@ from typing import List, Dict, Any, Optional, Union
 import json
 from datetime import datetime
 from bson import ObjectId
-from .llm_config import llm
-from .logger import setup_logger
+from agent.utils.llm_config import llm
+from agent.utils.logger import setup_logger
 
 # Initialize logger
 logger = setup_logger('nosql_agent')
@@ -19,7 +19,7 @@ class MongoJSONEncoder(json.JSONEncoder):
         return super().default(obj)
 
 class GeneralizedNoSQLAgent:
-    def __init__(self, connection_string: str = "mongodb://localhost:27017/", database_name: Optional[str] = None):
+    def __init__(self, connection_string: str = "mongodb://localhost:27017/", database_name: Optional[str] = "user_management_db"):
         """
         Initialize the Generalized NoSQL agent with MongoDB connection.
         
@@ -723,70 +723,70 @@ Examples:
         logger.info("Closing MongoDB connection")
         self.client.close()
 
-# def main():
-#     """Main function to demonstrate the Generalized NoSQL agent usage with user_management_db."""
-#     try:
-#         # Initialize agent and connect to user_management_db
-#         print("\n=== Initializing NoSQL Agent with user_management_db ===")
-#         agent = GeneralizedNoSQLAgent()
-#         result = agent.execute_query("use database user_management_db")
-#         print("Database connection result:", json.dumps(result, indent=2, cls=MongoJSONEncoder))
+def main():
+    """Main function to demonstrate the Generalized NoSQL agent usage with user_management_db."""
+    try:
+        # Initialize agent and connect to user_management_db
+        # print("\n=== Initializing NoSQL Agent with user_management_db ===")
+        agent = GeneralizedNoSQLAgent()
+        # result = agent.execute_query("use database user_management_db")
+        # print("Database connection result:", json.dumps(result, indent=2, cls=MongoJSONEncoder))
         
-#         # List available collections
-#         print("\n=== Available Collections ===")
-#         result = agent.execute_query("list all collections")
-#         print("Collections:", json.dumps(result, indent=2, cls=MongoJSONEncoder))
+        # List available collections
+        print("\n=== Available Collections ===")
+        result = agent.execute_query("Retrieve the version of the system from the NoSQL database")
+        print("Collections:", json.dumps(result, indent=2, cls=MongoJSONEncoder))
         
-#         # Test Case 1: Query Users
-#         print("\n=== Test Case 1: Query Users ===")
-#         print("Finding all users:")
-#         result = agent.execute_query("Find all users")
-#         print(json.dumps(result, indent=2, cls=MongoJSONEncoder))
+        # # Test Case 1: Query Users
+        # print("\n=== Test Case 1: Query Users ===")
+        # print("Finding all users:")
+        # result = agent.execute_query("Find all users")
+        # print(json.dumps(result, indent=2, cls=MongoJSONEncoder))
         
-#         print("\nFinding users with admin role:")
-#         result = agent.execute_query("Find all users with role_name 'Admin'")
-#         print(json.dumps(result, indent=2, cls=MongoJSONEncoder))
+        # print("\nFinding users with admin role:")
+        # result = agent.execute_query("Find all users with role_name 'Admin'")
+        # print(json.dumps(result, indent=2, cls=MongoJSONEncoder))
         
-#         # Test Case 2: Query Roles
-#         print("\n=== Test Case 2: Query Roles ===")
-#         print("Finding all roles:")
-#         result = agent.execute_query("Find all roles")
-#         print(json.dumps(result, indent=2, cls=MongoJSONEncoder))
+        # # Test Case 2: Query Roles
+        # print("\n=== Test Case 2: Query Roles ===")
+        # print("Finding all roles:")
+        # result = agent.execute_query("Find all roles")
+        # print(json.dumps(result, indent=2, cls=MongoJSONEncoder))
         
-#         # Test Case 3: Query Activity Logs
-#         print("\n=== Test Case 3: Query Activity Logs ===")
-#         print("Finding recent login activities:")
-#         result = agent.execute_query("Find all activity logs of type 'login'")
-#         print(json.dumps(result, indent=2, cls=MongoJSONEncoder))
+        # # Test Case 3: Query Activity Logs
+        # print("\n=== Test Case 3: Query Activity Logs ===")
+        # print("Finding recent login activities:")
+        # result = agent.execute_query("Find all activity logs of type 'login'")
+        # print(json.dumps(result, indent=2, cls=MongoJSONEncoder))
         
-#         # Test Case 4: Complex Queries
-#         print("\n=== Test Case 4: Complex Queries ===")
-#         print("Finding active users in Engineering department:")
-#         result = agent.execute_query("Find all users with status 'Active' and department 'Engineering'")
-#         print(json.dumps(result, indent=2, cls=MongoJSONEncoder))
+        # # Test Case 4: Complex Queries
+        # print("\n=== Test Case 4: Complex Queries ===")
+        # print("Finding active users in Engineering department:")
+        # result = agent.execute_query("Find all users with status 'Active' and department 'Engineering'")
+        # print(json.dumps(result, indent=2, cls=MongoJSONEncoder))
         
-#         # Test Case 5: Aggregate Operations
-#         print("\n=== Test Case 5: Aggregate Operations ===")
-#         print("Calculating users per department:")
-#         result = agent.execute_query("Calculate the number of users in each department")
-#         print(json.dumps(result, indent=2, cls=MongoJSONEncoder))
+        # # Test Case 5: Aggregate Operations
+        # print("\n=== Test Case 5: Aggregate Operations ===")
+        # print("Calculating users per department:")
+        # result = agent.execute_query("Calculate the number of users in each department")
+        # print(json.dumps(result, indent=2, cls=MongoJSONEncoder))
         
-#         # Test Case 6: Schema Information
-#         print("\n=== Test Case 6: Schema Information ===")
-#         print("Getting users collection schema:")
-#         result = agent.execute_query("Get the schema of the users collection")
-#         print(json.dumps(result, indent=2, cls=MongoJSONEncoder))
+        # # Test Case 6: Schema Information
+        # print("\n=== Test Case 6: Schema Information ===")
+        # print("Getting users collection schema:")
+        # result = agent.execute_query("Get the schema of the users collection")
+        # print(json.dumps(result, indent=2, cls=MongoJSONEncoder))
         
-#         # Cleanup
-#         print("\n=== Cleanup ===")
-#         agent.close()
-#         print("Test completed and connection closed.")
+        # # Cleanup
+        # print("\n=== Cleanup ===")
+        # agent.close()
+        # print("Test completed and connection closed.")
             
-#     except Exception as e:
-#         print(f"An error occurred during testing: {str(e)}")
-#         logger.error(f"An error occurred: {str(e)}", exc_info=True)
-#         if 'agent' in locals():
-#             agent.close()
+    except Exception as e:
+        print(f"An error occurred during testing: {str(e)}")
+        logger.error(f"An error occurred: {str(e)}", exc_info=True)
+        if 'agent' in locals():
+            agent.close()
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
