@@ -1,8 +1,6 @@
 import sqlite3
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any
 from agent.utils.llm_config import llm
-import json
-from datetime import datetime
 from agent.utils.logger import default_logger as logger
 import asyncio
 from contextlib import contextmanager

@@ -11,10 +11,10 @@ import asyncio
 from functools import partial
 import sqlite3
 from contextlib import contextmanager
-
-from .state import InputState, OutputState, Configuration
+from .state import InputState, Configuration
 from .sql_agent import SQLAgent
-from .no_sql_agent import GeneralizedNoSQLAgent
+from agent.utils.logger import setup_logger
+from agent.utils.no_sql_agent import GeneralizedNoSQLAgent, MongoJSONEncoder
 
 logger = logging.getLogger(__name__)
 
@@ -258,6 +258,85 @@ async def sql_agent_node(state: InputState, config: RunnableConfig) -> Dict[str,
                     "content": json.dumps({
                         "status": "error",
                         "error": f"Failed to process SQL tasks: {str(e)}",
+                        "retry_count": 0
+                    }, indent=2)
+                }
+            ]
+        }
+
+# Initialize logger
+logger = setup_logger('nosql_agent_node')
+
+async def nosql_agent_node(state: InputState, config: RunnableConfig) -> Dict[str, Any]:
+    """NoSQL agent node that processes NoSQL-related tasks from the supervisor."""
+    try:
+        # Get the last message which contains the task analysis
+        last_message = state["messages"][-1]["content"]
+        task_analysis = json.loads(last_message)
+        
+        # Initialize NoSQL agent using the GeneralizedNoSQLAgent class
+        nosql_connection_string = os.getenv("NOSQL_CONNECTION_STRING", "mongodb://localhost:27017")
+        database_name = os.getenv("NOSQL_DATABASE", "user_management_db")
+        nosql_agent = GeneralizedNoSQLAgent(nosql_connection_string, database_name)
+        
+        # Find NoSQL tasks
+        nosql_tasks = [task for task in task_analysis["tasks"] if task["agent"] == "nosql_agent"]
+        
+        results = []
+        for task in nosql_tasks:
+            try:
+                # Execute the NoSQL task
+                result = nosql_agent.execute_query(task["taskDefinition"])
+                
+                # Ensure the result is a dictionary
+                if isinstance(result, dict):
+                    # Convert to JSON serializable format using MongoJSONEncoder
+                    result_str = json.dumps(result, cls=MongoJSONEncoder)
+                    result_dict = json.loads(result_str)
+                    
+                    results.append({
+                        "task": task,
+                        "result": result_dict
+                    })
+                else:
+                    logger.error(f"Unexpected result type: {type(result)}")
+                    results.append({
+                        "task": task,
+                        "error": "Invalid result type from NoSQL agent"
+                    })
+            except Exception as e:
+                logger.error(f"Error executing NoSQL task: {str(e)}", exc_info=True)
+                results.append({
+                    "task": task,
+                    "error": str(e)
+                })
+        
+        nosql_agent.close()
+        
+        # Create the output state with results
+        output_state = {
+            "messages": [
+                {
+                    "role": "assistant",
+                    "content": json.dumps({
+                        "status": "success",
+                        "nosql_results": results,
+                        "original_analysis": task_analysis
+                    }, indent=2)
+                }
+            ]
+        }
+        
+        return output_state
+    except Exception as e:
+        logger.error(f"Error in nosql_agent_node: {str(e)}", exc_info=True)
+        return {
+            "messages": [
+                {
+                    "role": "assistant",
+                    "content": json.dumps({
+                        "status": "error",
+                        "error": f"Failed to process NoSQL tasks: {str(e)}",
                         "retry_count": 0
                     }, indent=2)
                 }

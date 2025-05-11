@@ -1,7 +1,41 @@
 {
-  "dependencies": ["."],
+  "name": "LocoForge2",
+  "description": "LangGraph application configuration",
+  "version": "0.1.0",
+  "development": {
+    "port": 2024,
+    "host": "127.0.0.1",
+    "debug": true,
+    "auto_reload": true
+  },
   "graphs": {
     "agent": "./src/agent/graph.py:graph"
   },
-  "env": ".env"
+  "dependencies": [
+    "langgraph",
+    "pydantic",
+    "langchain-core",
+    "langchain-openai",
+    "."
+  ],
+  "auth": null,
+  "memory": {
+    "type": "in_memory"
+  },
+  "logging": {
+    "level": "info",
+    "format": "json"
+  },
+  "model": {
+    "provider": "openai",
+    "name": "gpt-3.5-turbo",
+    "temperature": 0.7,
+    "max_tokens": 2048
+  },
+  "env": ".env",
+  "cors": {
+      "allow_origins": ["*"],
+      "allow_methods": ["*"],
+      "allow_headers": ["*"]
+    }
 }

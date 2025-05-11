@@ -19,7 +19,7 @@ class MongoJSONEncoder(json.JSONEncoder):
         return super().default(obj)
 
 class GeneralizedNoSQLAgent:
-    def __init__(self, connection_string: str = "mongodb://localhost:27017/", database_name: Optional[str] = "user_management_db"):
+    def __init__(self, connection_string: str, database_name: Optional[str]):
         """
         Initialize the Generalized NoSQL agent with MongoDB connection.
         
